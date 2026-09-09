@@ -1,11 +1,14 @@
 FROM alpine:3.24
 
-RUN apk add --no-cache openrc openssh \
- && mkdir -p /run/openrc \
- && touch /run/openrc/softlevel \
- && ssh-keygen -A \
- && rc-update add sshd default
+ARG S6_OVERLAY_VERSION=3.2.3.2
 
-EXPOSE 22
+# Alpine 必须安装 xz 才能解压 .tar.xz 格式
+RUN apk add --no-cache xz
 
-CMD ["/sbin/init"]
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm -f /tmp/s6-overlay-noarch.tar.xz
+
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm -f /tmp/s6-overlay-x86_64.tar.xz
+
+ENTRYPOINT ["/init"]
