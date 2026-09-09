@@ -1,14 +1,12 @@
-FROM alpine:3.19
+FROM alpine:3.24
 
-# 下载 Forego 独立静态二进制
-ADD https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-amd64.tgz /tmp
-RUN tar -xzf /tmp/forego-stable-linux-amd64.tgz -C /usr/local/bin && \
-    chmod +x /usr/local/bin/forego && \
-    rm -rf /tmp/*
+# 安装 runit
+RUN apk add --no-cache runit
 
-WORKDIR /app
+# 内联创建服务目录及 run 脚本，并赋执行权限
+RUN mkdir -p /etc/service/app1 /etc/service/app2 && \
+    printf '#!/bin/sh\nexec 2>&1\necho "app1 start"\nexec sleep infinity\n' > /etc/service/app1/run && \
+    printf '#!/bin/sh\nexec 2>&1\nwhile true; do echo "app2 heartbeat"; sleep 5; done\n' > /etc/service/app2/run && \
+    chmod +x /etc/service/app1/run /etc/service/app2/run
 
-# 内联生成 Procfile（包含两个常驻的空载测试进程）
-RUN printf "app1: sleep infinity\napp2: sh -c 'while true; do echo app2 ping; sleep 5; done'\n" > /app/Procfile
-
-ENTRYPOINT ["/usr/local/bin/forego", "start", "-r"]
+ENTRYPOINT ["runsvdir", "-P", "/etc/service"]
