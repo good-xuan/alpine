@@ -4,15 +4,17 @@ RUN apk update && \
     apk add --no-cache \
         ttyd \
         tini \
-        fish \
+        bash \
         coreutils \
-        fastfetch
+        fastfetch \
+        fish
 
-# 1. 确保指定终端类型支持彩色字符与图形
 ENV TERM=xterm-256color
 
-
-RUN echo 'fastfetch' >> /root/.profile 
+# 写入 config.fish：清空 fish 自带的文本问候语，并执行 fastfetch
+RUN mkdir -p /root/.config/fish && \
+    echo 'set -g fish_greeting ""' >> /root/.config/fish/config.fish && \
+    echo 'fastfetch' >> /root/.config/fish/config.fish
 
 WORKDIR /root
 
@@ -23,5 +25,5 @@ EXPOSE 7681
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# 明确启动交互式 shell
-CMD ["-W", "-p", "7681", "fish", "-l"]
+# 默认启动 Shell 设为 fish
+CMD ["-W", "-p", "7681", "fish"]
