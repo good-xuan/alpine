@@ -1,6 +1,5 @@
 FROM alpine:3.24
 
-# 开启 community 仓库并安装 ttyd、fastfetch 等依赖
 RUN apk update && \
     apk add --no-cache \
         ttyd \
@@ -9,8 +8,12 @@ RUN apk update && \
         coreutils \
         fastfetch
 
-# 在进入终端时自动运行 fastfetch
-RUN echo 'fastfetch' >> /root/.bashrc
+# 1. 确保指定终端类型支持彩色字符与图形
+ENV TERM=xterm-256color
+
+# 2. Alpine 默认会读取 /root/.profile，直接写入 .profile 和 .bashrc，确保登录与非登录都能触发
+RUN echo 'fastfetch' >> /root/.profile && \
+    echo 'fastfetch' >> /root/.bashrc
 
 WORKDIR /root
 
@@ -21,5 +24,5 @@ EXPOSE 7681
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-# 关键：加上 --login 参数，确保每次 Web 终端接入时都会以登录 Shell 读取 .bashrc
-CMD ["-W", "-p", "7681", "bash", "--login"]
+# 明确启动交互式 shell
+CMD ["-W", "-p", "7681", "bash", "-l"]
