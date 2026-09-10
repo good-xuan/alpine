@@ -11,6 +11,8 @@ RUN printf '%s\n' \
     'rc_sys="docker"' \
     >> /etc/rc.conf
 
+RUN sed -i -E '/^tty[1-6]::/d' /etc/inittab
+
 EXPOSE 22
 
 CMD ["/sbin/init"]
