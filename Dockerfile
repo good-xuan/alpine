@@ -13,6 +13,8 @@ RUN printf '%s\n' \
 
 RUN sed -i -E '/^tty[1-6]::/d' /etc/inittab
 
+WORKDIR /app
+
 EXPOSE 22
 
 CMD ["/sbin/init"]
