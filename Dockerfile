@@ -4,6 +4,7 @@ FROM alpine:latest
 RUN apk add --no-cache openssh-server && \
     ssh-keygen -A
 
+RUN echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
 
 # 写入公钥并设置权限
 RUN mkdir -p /root/.ssh && \
