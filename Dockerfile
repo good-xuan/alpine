@@ -1,20 +1,17 @@
-FROM alpine:3.24
+FROM alpine:latest
 
-RUN apk add --no-cache openrc openssh \
- && mkdir -p /run/openrc \
- && touch /run/openrc/softlevel \
- && ssh-keygen -A \
- && rc-update add sshd default
+# 安装 OpenSSH 并生成主机密钥
+RUN apk add --no-cache openssh-server && \
+    ssh-keygen -A
 
- # 告诉 OpenRC 当前运行在 Docker 容器中
-RUN printf '%s\n' \
-    'rc_sys="docker"' \
-    >> /etc/rc.conf
+RUN echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
 
-RUN sed -i -E '/^tty[1-6]::/d' /etc/inittab
-
-WORKDIR /app
+# 写入公钥并设置权限
+RUN mkdir -p /root/.ssh && \
+    echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKNO8F+WpepHGltONbWdvkkdgnkb+z8M0VaILtAKOZQQ sftp@sftp" > /root/.ssh/authorized_keys && \
+    chmod 700 /root/.ssh && \
+    chmod 600 /root/.ssh/authorized_keys
 
 EXPOSE 22
 
-CMD ["/sbin/init"]
+CMD ["/usr/sbin/sshd", "-D", "-e"]
